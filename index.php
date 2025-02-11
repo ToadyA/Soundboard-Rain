@@ -21,7 +21,7 @@
 		<div class="grid-button" onclick="gridClick(9)">9</div>
 	</div>
 
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <!--  <script src="https://sdk.scdn.co/spotify-player.js"></script>  -->
     <script src="tapstaps.js"></script>
     
 </body>
