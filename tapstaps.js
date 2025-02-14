@@ -1,5 +1,5 @@
 
-const generateRandomString = (Length) => {
+const generateRandomString = (length) => {
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	const values = crypto.getRandomValues(new Uint8Array(length));
 	return values.reduce((acc, x) => acc + possible[x % possible.length], "");
@@ -27,8 +27,8 @@ const generateCodeChallenge = async (codeVerifier) => {
 	const codeChallenge = await generateCodeChallenge(codeVerifier);
 
 	const clientId = 'bad5de23f78743e9b487f995c310da5b';
-	const redirectUri = 'http://localhost:8080';
-	const scope = 'user=read-private user-read-email';
+	const redirectUri = 'https://open.spotify.com/';
+	const scope = 'user-read-private user-read-email';
 	const authUrl = new URL("https://accounts.spotify.com/authorize");
 
 	window.localStorage.setItem('code_verifier', codeVerifier);
@@ -43,7 +43,7 @@ const generateCodeChallenge = async (codeVerifier) => {
 	}
 
 	authUrl.search = new URLSearchParams(params).toString();
-	window.location.href = authUrl.toString();
+	//window.location.href = authUrl.toString();
 
 	const urlParams = new URLSearchParams(window.location.search);
 	let code = urlParams.get('code');
@@ -56,14 +56,14 @@ const generateCodeChallenge = async (codeVerifier) => {
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			body: new URLSearchParams({
-				client_id: cliendId,
+				client_id: clientId,
 				grant_type: 'authorization_code',
 				code,
 				redirect_uri: redirectUri,
 				code_verifier: codeVerifier
 			})
 		}
-		const body = await fetch('htttps://accounts.spotify.com/api/token', payload);
+		const body = await fetch('https://accounts.spotify.com/api/token', payload);
 		const response = await body.json();
 		
 		localStorage.setItem('access_token', response.access_token);
@@ -74,6 +74,9 @@ const generateCodeChallenge = async (codeVerifier) => {
 	
 	if(code){
 		await getToken(code);
+	}
+	else{
+		console.error('No authorization code found in URL');
 	}
 })();
 
@@ -104,8 +107,8 @@ const getRefreshToken = async () => {
 
 let player;
 
-/*window.onSpotifyWebPlaybackSDKReady = () => {
-	const token = '';
+window.onSpotifyWebPlaybackSDKReady = () => {
+	const token = localStorage.getItem('access_token');
 	player = new Spotify.Player({
 		name: 'The Rain',
 		getOAuthToken: cb => { cb(token); },
@@ -140,18 +143,18 @@ let player;
 
 	player.connect();
 }
-*/
+
 function turtles(clipURI, start, length){
 	player.options.getOAuthToken(access_token => {
 		fetch(`https://api.spotify.com/v1/me/player/play`, {
-			methond: 'PUT',
+			method: 'PUT',
 			body: JSON.stringify({
 				uris: [clipURI],
 				position_ms: (start * 1000)
 			}),
 			headers: {
 				'Content-Type': 'application/json',
-							
+				'Authorization': `Bearer ${access_token}`
 			}
 		});
 	});
