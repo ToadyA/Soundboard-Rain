@@ -1,4 +1,5 @@
 
+//makes a string of 64-128 character length to be codeVerifier
 const generateRandomString = (length) => {
 	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	const values = crypto.getRandomValues(new Uint8Array(length));
@@ -18,90 +19,87 @@ const base64encode = (input) => {
 		.replace(/\+/g, '-')
 		.replace(/\//g, '_');
 }
+
+//differs because naked 'await' is disliked; makes codeChallenge.
 const generateCodeChallenge = async (codeVerifier) => {
 	const hashed = await sha256(codeVerifier)
 	return base64encode(hashed);
 }
+const codeChallenge = generateCodeChallenge;
 
-(async () => {
-	const codeChallenge = await generateCodeChallenge(codeVerifier);
+const clientId = 'bad5de23f78743e9b487f995c310da5b';
+const redirectUri = 'http://localhost/Soundboard-Rain/index.php';
+const scope = 'user-read-private user-read-email';
+const authUrl = new URL("https://accounts.spotify.com/authorize");
 
-	const clientId = 'bad5de23f78743e9b487f995c310da5b';
-	const redirectUri = 'https://open.spotify.com/';
-	const scope = 'user-read-private user-read-email';
-	const authUrl = new URL("https://accounts.spotify.com/authorize");
+window.localStorage.setItem('code_verifier', codeVerifier);
 
-	window.localStorage.setItem('code_verifier', codeVerifier);
+const params =  {
+	response_type: 'code',
+    client_id: clientId,
+    scope,
+    code_challenge_method: 'S256',
+    code_challenge: codeChallenge,
+    redirect_uri: redirectUri,
+}
 
-	const params = {
-		response_type: 'code',
-		client_id: clientId,
-		scope,
-		code_challenge_method: 'S256',
-		code_challenge: codeChallenge,
-		redirect_uri: redirectUri
-	}
+authUrl.search = new URLSearchParams(params).toString();
 
-	authUrl.search = new URLSearchParams(params).toString();
-	//window.location.href = authUrl.toString();
+const urlParams = new URLSearchParams(window.location.search);
+let code = urlParams.get('code');
 
-	const urlParams = new URLSearchParams(window.location.search);
-	let code = urlParams.get('code');
-
-	const getToken = async code =>{
-		let codeVerifier = localStorage.getItem('code_verifier');
-		const payload = {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-			body: new URLSearchParams({
-				client_id: clientId,
-				grant_type: 'authorization_code',
-				code,
-				redirect_uri: redirectUri,
-				code_verifier: codeVerifier
-			})
-		}
-		const body = await fetch('https://accounts.spotify.com/api/token', payload);
-		const response = await body.json();
+//redirect if uh-oh
+if(!code){
+	window.location.href = authUrl.toString();
+}
+else{
+	const getToken = async code => {
+		const codeVerifier = localStorage.getItem('code_verifier');
 		
-		localStorage.setItem('access_token', response.access_token);
-		if(response.refresh_token){
-			localStorage.setItem('refresh_token', response.refresh_token);
-		}
+		const url = "https://accounts.spotify.com/api/token";
+		const payload = {
+		    method: 'POST',
+		    headers: {
+		      'Content-Type': 'application/x-www-form-urlencoded',
+		    },
+		    body: new URLSearchParams({
+		    	client_id: clientId,
+		      	grant_type: 'authorization_code',
+		      	code,
+		      	redirect_uri: redirectUri,
+		      	code_verifier: codeVerifier,
+		    }),
+		  }
+		
+		  const body = await fetch(url, payload);
+		  const response = await body.json();
+		
+		  localStorage.setItem('access_token', response.access_token);
 	}
-	
-	if(code){
-		await getToken(code);
-	}
-	else{
-		console.error('No authorization code found in URL');
-	}
-})();
+}
 
+//renewable process while in motion
 const getRefreshToken = async () => {
+	const refreshToken = localStorage.getItem('refresh_token');
+	const url = "https://accounts.spotify.com/api/token";
 
- const refreshToken = localStorage.getItem('refresh_token');
- const url = "https://accounts.spotify.com/api/token";
+ 	const payload = {
+		method: 'POST',
+    	headers: {
+      	'Content-Type': 'application/x-www-form-urlencoded'
+	    },
+	    body: new URLSearchParams({
+	      	grant_type: 'refresh_token',
+	      	refresh_token: refreshToken,
+	      	client_id: clientId
+	    })
+  	}
+  	const body = await fetch(url, payload);
+  	const response = await body.json();
 
-  const payload = {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-      client_id: clientId
-    })
-  }
-  const body = await fetch(url, payload);
-  const response = await body.json();
-
-  localStorage.setItem('access_token', response.accessToken);
-  if (response.refreshToken) {
-    localStorage.setItem('refresh_token', response.refreshToken);
+  	localStorage.setItem('access_token', response.accessToken);
+	if (response.refreshToken){
+    	localStorage.setItem('refresh_token', response.refreshToken);
   }
 }
 
@@ -144,24 +142,39 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 	player.connect();
 }
 
-function turtles(clipURI, start, length){
-	player.options.getOAuthToken(access_token => {
-		fetch(`https://api.spotify.com/v1/me/player/play`, {
-			method: 'PUT',
-			body: JSON.stringify({
-				uris: [clipURI],
-				position_ms: (start * 1000)
-			}),
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${access_token}`
-			}
-		});
-	});
-	
-	setTimeout(() =>{
-		player.pause();
-	}, (length * 1000));
+//dislikes this method, dislikes trying to PUT by this uri, claims I lack permission.
+const turtles = (clipURI, start, length) => {
+	const token = localStorage.getItem('access_token');
+	  
+	  const playSnippet = async () => {
+	    const response = await fetch(`https://api.spotify.com/v1/me/player/play`, {
+	      method: 'PUT',
+	      headers: {
+	        'Authorization': `Bearer ${token}`,
+	        'Content-Type': 'application/json'
+	      },
+	      body: JSON.stringify({ uris: [clipURI], position_ms: start * 1000}),
+	    });
+
+	    if (response.ok) {
+	      setTimeout(async () => {
+	        const pauseResponse = await fetch(`https://api.spotify.com/v1/me/player/pause`, {
+	          method: 'PUT',
+	          headers: {
+	            'Authorization': `Bearer ${token}`
+	          }
+	        });
+
+	        if (!pauseResponse.ok) {
+	          console.error('Failed to pause playback');
+	        }
+	      }, length * 1000);
+	    } else {
+	      console.error('Failed to play track');
+	    }
+	  };
+
+	  playSnippet();
 }
 
 function gridClick(n){
@@ -241,3 +254,91 @@ function gridClick(n){
 		// 3:22 - 3:26
 	}
 }
+
+var rainQueue = [1, 2, 3]; //blacklist to avoid too many repeats
+var rainInterval;
+var raining = false;
+
+//commence the raining
+function rainDance(){
+	if(raining){
+		clearInterval(rainInterval);
+	}
+	else{
+		rainInterval = setInterval(cloud, 250);
+	}
+	raining = !raining;
+}
+
+//compare against the blacklist
+function cloud(){
+	const droplet = (Math.floor(Math.random() * 9) + 1);
+	if(!rainQueue.includes(droplet)){
+		rainQueue.shift();
+		rainQueue.push(droplet);
+		rain(droplet);
+	}
+}
+
+//raindrops spawn at a random point on a circle of radius 160 set on top of each of the 9 panels
+//r^2 = (x + offsetY + displacementX)^2 + (y + offsetY + displacementY)^2
+function rain(n){
+	//use the other algorithm to see the x,y coordinates' offset
+	let m = (n % 3);
+	let p = 1;
+	if(n >= 3){
+		p = (1 + ((n - m) / 3));
+	}
+	if(m == 0){
+		m = 3;
+		p --;
+	}
+	let y = Math.floor(Math.random() * 361) + 120;
+	let x = ((p * 160) - 60) + Math.sqrt(25600 + Math.pow((y - (m * 160)), 2));
+	makeItRain(x, y);
+}
+
+//splish splosh sploosh are animated ring effects; drip is created at the x,y determined in rain();
+//drip is the affecting object which will check for collision.
+function makeItRain(x, y){
+	const drip = document.createElement('div');
+	drip.classList.add('drip');
+	drip.style.left = `${x}px`;
+	drip.style.top = `${y}px`;
+	document.body.appendChild(drip);
+	
+	bigSplash(x, y, 'splish');
+	bigSplash(x, y, 'splosh');
+	bigSplash(x, y, 'sploosh');
+	
+	setTimeout(() => drip.remove(), 1000);
+	checkCollision(drip);
+}
+
+//summons the rings splish splosh sploosh and gives them a kill timer
+function bigSplash(x, y, plop){
+	const splash = document.createElement('div');
+	splash.classList.add(plop);
+	splash.style.left = `${x}px`;
+	splash.style.top = `${y}px`;
+	document.body.appendChild(splash);
+	
+	setTimeout(() => splash.remove(), 1000);
+}
+
+//compares x,y of drip and grid-panel 1-9 to check for collision
+function checkCollision(drip){
+	console.log('checking collision');
+	const panels = document.querySelectorAll('.grid-panel');
+	panels.forEach(panel => {
+		const hurtBox = panel.getBoundingClientRect();
+		const hitBox = drip.getBoundingClientRect();
+		console.log('Drip:' + hitBox + 'Panel:' + hurtBox);
+		
+		if(hitBox.left >= hurtBox.left && hitBox.right <= hurtBox.right && hitBox.top >= hurtBox.top && hitBox.bottom >= hurtBox.bottom){
+			gridClick(parseInt(panel.getAttribute('data-panel')));
+			console.log('' + parseInt(panel.getAttribute('data-panel')));
+		}
+	})
+}
+

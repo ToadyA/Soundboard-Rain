@@ -1,5 +1,6 @@
 @charset "UTF-8";
 .grid-container {
+	position: relative;
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	gap: 10px;
@@ -17,3 +18,53 @@
 	justify-content: center;
 	align-items: center;
 }
+@keyframes splashAnimation{
+	0%{
+		width: 100%;
+		height: 100%;
+	}
+	100%{
+		width: 200%;
+		height: 110%;
+	}
+}
+.splish{
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	border: 10px solid #6e81f5;
+	background-color: transparent;
+	opacity: 65%;
+	animation: splashAnimation 1s forwards;
+}
+.splosh{
+	position: absolute;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	border: 15px solid #6e81f5;
+	background-color: transparent;
+	opacity: 40%;
+	animation: splashAnimation 1s forwards;
+}
+.sploosh{
+	position: absolute;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	border: 10px solid #6e81f5;
+	background-color: transparent;
+	opacity: 65%;
+	animation: splashAnimation 1s forwards;
+}
+.drip {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: blue;
+    border-radius: 50%;
+    opacity: 45%;
+    cursor: pointer;
+}
+

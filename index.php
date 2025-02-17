@@ -20,6 +20,8 @@
 		<div class="grid-button" onclick="gridClick(8)">8</div>
 		<div class="grid-button" onclick="gridClick(9)">9</div>
 	</div>
+	
+	<button onclick="rainDance()">Woohoo</button>
 
     <!--  <script src="https://sdk.scdn.co/spotify-player.js"></script>  -->
     <script src="tapstaps.js"></script>
