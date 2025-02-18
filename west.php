@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Soundboard: Topeka</title>
+	<title>Soundboard: Sacramento</title>
 	<link rel="stylesheet" href="tap.css">
 </head>
 <body>
@@ -21,23 +21,13 @@
 		<div class="grid-button" onclick="gridClick(9)">9</div>
 	</div>
 	
-	<button onclick="checkWeatherTop()">Is it raining?</button>
+	<button onclick="checkWeatherSac()">Is it raining?</button>
 	<p id="weather-status">Casting above...</p>
 	<button onclick="rainDance()">Woohoo!!</button>
-	
-	<a href="west.php">
-		<img src="images/arrow.png" alt="to Sacramento" class="west-arrow">
+
+	<a href="index.php">
+		<img src="arrow.png" alt="to Kansas" class="east-arrow">
 	</a>
-	<a href="east.php">
-		<img src="images/arrow.png" alt="to New York" class="east-arrow">
-	</a>
-	<a href="north.php">
-		<img src="images/arrow.png" alt="to Bismarck" class="north-arrow">
-	</a>
-	<a href="south.php">
-		<img src="images/arrow.png" alt="to Baton Rouge" class="south-arrow">
-	</a>
-	
     <!--  <script src="https://sdk.scdn.co/spotify-player.js"></script>  -->
     <script src="tapstaps.js"></script>
     

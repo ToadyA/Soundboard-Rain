@@ -342,3 +342,68 @@ function checkCollision(drip){
 	})
 }
 
+async function checkWeatherBis(){
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=46.8083&longitude=-100.7837&current_weather=true');
+    const data = await response.json();
+    const weatherStatus = document.getElementById('weather-status');
+    const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99];
+    const rainy = rainCodes.includes(data.currentweather.weather_code);
+    if(rainy){
+        weatherStatus.textContent = "It is raining! Push the button!!";
+    }
+    else{
+        weatherStatus.textContent = "It is not raining... Please don't push the button."
+    }
+}
+async function checkWeatherSac(){
+	const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=38.5816&longitude=-121.4944&current_weather=true');
+	const data = await response.json();
+	const weatherStatus = document.getElementById('weather-status');
+    const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99];
+    const rainy = rainCodes.includes(data.currentweather.weather_code);
+	if(rainy){
+		weatherStatus.textContent = "It is raining! Push the button!!";
+	}
+	else{
+		weatherStatus.textContent = "It is not raining... Please don't push the button."
+	}
+}
+async function checkWeatherNY(){
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=40.7143&longitude=-74.006&current_weather=true');
+    const data = await response.json();
+    const weatherStatus = document.getElementById('weather-status');
+    const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99];
+    const rainy = rainCodes.includes(data.currentweather.weather_code);
+    if(rainy){
+        weatherStatus.textContent = "It is raining! Push the button!!";
+    }
+    else{
+        weatherStatus.textContent = "It is not raining... Please don't push the button."
+    }
+}
+async function checkWeatherBR(){
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=30.4433&longitude=-91.1875&current_weather=true');
+    const data = await response.json();
+    const weatherStatus = document.getElementById('weather-status');
+    const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99];
+    const rainy = rainCodes.includes(data.currentweather.weather_code);
+    if(rainy){
+        weatherStatus.textContent = "It is raining! Push the button!!";
+    }
+    else{
+        weatherStatus.textContent = "It is not raining... Please don't push the button."
+    }
+}
+async function checkWeatherTop(){
+    const response = await fetch('https://api.open-meteo.com/v1/forecast?latitude=39.0483&longitude=-95.678&current_weather=true');
+    const data = await response.json();
+    const weatherStatus = document.getElementById('weather-status');
+    const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 85, 86, 95, 96, 99];
+    const rainy = rainCodes.includes(data.currentweather.weather_code);
+    if(rainy){
+        weatherStatus.textContent = "It is raining! Push the button!!";
+    }
+    else{
+        weatherStatus.textContent = "It is not raining... Please don't push the button."
+    }
+}
